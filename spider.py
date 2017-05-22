@@ -11,4 +11,3 @@ print(r.status_code)
 print(r.headers)
 print(r.encoding)
 print(r.text)
-
