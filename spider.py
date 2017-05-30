@@ -8,7 +8,14 @@ headers = {
 r = requests.get("https://www.zhihu.com/people/moranzcw/following", headers = headers)
 
 print(r.status_code)
-print(r.headers)
+# print(r.headers)
 print(r.encoding)
-print(r.text)
+# print(r.text)
 
+regex = r'(?<=href=")/people/.*?"'
+pattern = re.compile(regex)
+result = pattern.findall(r.text)
+
+for x in result:
+	print(x)
+	pass
