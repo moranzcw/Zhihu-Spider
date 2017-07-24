@@ -1,11 +1,6 @@
 import requests
 import re
-import json
-from threading import Thread
-from queue import Queue
 
-urlQueue = Queue()
-infoQueue = Queue()
 
 f = open(r'test.txt', 'r')  # 打开所保存的cookies内容文件
 cookies = {}  # 初始化cookies字典变量
@@ -16,14 +11,13 @@ for line in f.read().split(';'):  # 按照字符：进行划分读取
 
 headers = {
     "Host": "www.zhihu.com",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-    AppleWebKit/537.36 (KHTML, like Gecko) \
-    Chrome/58.0.3029.110 \
-    Safari/537.36"
+    "Host": "www.zhihu.com",
+    "Referer": "https://www.zhihu.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                  "AppleWebKit/537.36 (KHTML, like Gecko)"
+                  "Chrome/58.0.3029.110"
+                  "Safari/537.36"
 }
-user_id_regex = r'(?<=api/v4/people/).{32}'
-user_id_pattern = re.compile(user_id_regex)
-user_url_token_regex = r'(?<="url_token": ").{32}'
 
 
 # 9ffd5c016aabeafd1030e63fe410beb8
@@ -43,42 +37,73 @@ user_url_token_regex = r'(?<="url_token": ").{32}'
 # "id": "9ffd5c016aabeafd1030e63fe410beb8"}
 
 
-def get_info(user_id):
-    response = requests.get("https://www.zhihu.com/api/v4/members/" + user_id, headers=headers, cookies=cookies)
-    # if response.status_code == 200:
-    print(response.status_code)
-    print(response.text)
+# 1. GET USER URL TOKEN
+
+def get_user_data_dict(user_id):
+    # Access the user data in json.
+    user_data_url = "https://www.zhihu.com/api/v4/members/" + user_id
+    response = requests.get(user_data_url, headers=headers, cookies=cookies)
+
+    # Format the json data into a dict.
+    user_data_dict = dict()
     if response.status_code == 200:
-        user_url_token_list = user_id_pattern.findall(response.text)
-    else:
-        user_url_token_list = []
-    # print (r.text)
-    return user_url_token_list
+        try:
+            user_data_dict = response.json()
+        except:
+            return user_data_dict
+    return user_data_dict
 
 
-class Worker(Thread):
-    def __init__(self):
-        Thread.__init__(self)
-
-    def run(self):
-        # url = urlQueue.get()
-        # info = ()
-        # infoQueue.put(info)
-        pass
+def get_user_url_token(user_data_dict):
+    # Get user url token.
+    try:
+        user_url_token = user_data_dict['url_token']
+    except:
+        return ''
+    return user_url_token
 
 
-class Master(Thread):
-    def __init__(self):
-        Thread.__init__(self)
+# 2. GET USER FOLLOWING LIST
 
-    def run(self):
-        # url = ''
-        # urlQueue.put(url)
-        # infoQueue.get()
-        pass
+user_id_regex = r'(?<=api/v4/people/).{32}'
+user_id_pattern = re.compile(user_id_regex)
+
+
+def get_user_following_page(user_url_token):
+    # Access the user following page.
+    user_following_url = "https://www.zhihu.com/people/" + user_url_token + "/following"
+    response = requests.get(user_following_url, headers=headers, cookies=cookies)
+    if response.status_code == 200:
+        return response.text
+    return ''
+
+
+def get_user_following_id_list(user_following_page):
+    # Parse out the following list from the page.
+    user_following_id_list = user_id_pattern.findall(user_following_page)
+    return user_following_id_list
+
+
+# 3. GET USER
+
+def get_user_info(user_data_dict, user_following_page):
+    # Get user information.
+    try:
+        user_info = [user_data_dict['id'],
+                     user_data_dict['url_token'],
+                     user_data_dict['name'],
+                     user_data_dict['headline'],
+                     user_data_dict['avatar_url_template'],
+                     user_data_dict['avatar_url']]
+    except:
+        return list()
+
+    # try:
+    #
+    # except: 
+
+    return user_info
 
 
 if __name__ == '__main__':
-    # print(headers)
-    resp = get_info("9ffd5c016aabeafd1030e63fe410beb8")
-    print(resp)
+    print('OK')
