@@ -1,22 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import requests
 import re
-
-
-f = open(r'test.txt', 'r')  # 打开所保存的cookies内容文件
-cookies = {}  # 初始化cookies字典变量
-for line in f.read().split(';'):  # 按照字符：进行划分读取
-    # 其设置为1就会把字符串拆分成2份
-    name, value = line.strip().split('=', 1)
-    cookies[name] = value  # 为字典cookies添加内容
+import login
 
 headers = {
     "Host": "www.zhihu.com",
-    "Host": "www.zhihu.com",
     "Referer": "https://www.zhihu.com/",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                  "AppleWebKit/537.36 (KHTML, like Gecko)"
-                  "Chrome/58.0.3029.110"
-                  "Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/59.0.3071.115 Safari/537.36"
 }
 
 
@@ -39,10 +32,10 @@ headers = {
 
 # 1. GET USER URL TOKEN
 
-def get_user_data_dict(user_id):
+def get_user_data_dict(session, user_id):
     # Access the user data in json.
     user_data_url = "https://www.zhihu.com/api/v4/members/" + user_id
-    response = requests.get(user_data_url, headers=headers, cookies=cookies)
+    response = session.get(user_data_url, headers=headers)
 
     # Format the json data into a dict.
     user_data_dict = dict()
@@ -69,10 +62,10 @@ user_id_regex = r'(?<=api/v4/people/).{32}'
 user_id_pattern = re.compile(user_id_regex)
 
 
-def get_user_following_page(user_url_token):
+def get_user_following_page(session, user_url_token):
     # Access the user following page.
     user_following_url = "https://www.zhihu.com/people/" + user_url_token + "/following"
-    response = requests.get(user_following_url, headers=headers, cookies=cookies)
+    response = session.get(user_following_url, headers=headers)
     if response.status_code == 200:
         return response.text
     return ''
@@ -81,6 +74,7 @@ def get_user_following_page(user_url_token):
 def get_user_following_id_list(user_following_page):
     # Parse out the following list from the page.
     user_following_id_list = user_id_pattern.findall(user_following_page)
+    user_following_id_list = list(set(user_following_id_list))
     return user_following_id_list
 
 
@@ -100,10 +94,29 @@ def get_user_info(user_data_dict, user_following_page):
 
     # try:
     #
-    # except: 
+    # except:
 
     return user_info
 
 
 if __name__ == '__main__':
-    print('OK')
+    session = requests.session()
+    session = login.load_cookie(session)
+    if login.isLogin(session):
+        print("OK")
+    else:
+        session = login.login(session)
+    user_data_dict = get_user_data_dict(session, "9ffd5c016aabeafd1030e63fe410beb8")
+    print(user_data_dict)
+    user_url_token = get_user_url_token(user_data_dict)
+    print(user_url_token)
+
+    user_following_page = get_user_following_page(session, user_url_token)
+    # print(user_following_page)
+    user_following_id_list = get_user_following_id_list(user_following_page)
+    print(user_following_id_list)
+
+    user_info = get_user_info(user_data_dict, user_following_page)
+    print(user_info)
+
+
