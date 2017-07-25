@@ -43,7 +43,7 @@ def save_cookie(session):
     return session
 
 
-def isLogin(session):
+def is_login(session):
     """Confirm you've logged in or not by checking the user's information page.
 
     Parameters:
@@ -69,10 +69,8 @@ def get_xsrf(session):
     Returns:
         string - _xsrf code
     """
-    # 获取登录时需要用到的_xsrf
     index_page = session.get('https://www.zhihu.com', headers=headers)
     pattern = r'name="_xsrf" value="(.*?)"'
-    # 这里的_xsrf 返回的是一个list
     _xsrf = re.findall(pattern, index_page.text)
     return _xsrf[0]
 
@@ -112,14 +110,8 @@ def login(session):
         session - a requests lib session
 
     Returns:
-        None
+        session - a requests lib session
     """
-
-    # # Have logged in or not.
-    # if isLogin(session):
-    #     print("You have already logged in.")
-    #     return
-
     # Get _xsrf code.
     _xsrf = get_xsrf(session)
     headers["X-Xsrftoken"] = _xsrf
@@ -156,11 +148,9 @@ def login(session):
     # Try to log in without captcha code.
     login_response = session.post(post_url, data=postdata, headers=headers)
 
-    # If the logon fails, log in again with captcha code.
+    # If the logon fails, log in again with the captcha code.
     login_code = login_response.json()
     if login_code['r'] == 1:
-        # 不输入验证码登录失败
-        # 使用需要输入验证码的方式登录
         captcha_filepath = get_captcha(session)
         print("Find the captcha.jpg in directory \"%s\" and input captcha code." % captcha_filepath)
         postdata["captcha"] = input("please input the captcha\n>")
@@ -176,7 +166,7 @@ def login(session):
 # if __name__ == '__main__':
 #     session = requests.session()
 #     load_cookie(session)
-#     if isLogin(session):
+#     if is_login(session):
 #         print("logged in.")
 #     else:
 #         login(session)
