@@ -1,5 +1,5 @@
-/*.csv
-/*.html
-/*.json
-/cookies
-/__pycache__
+*.csv
+*.html
+*.json
+cookies
+__pycache__
