@@ -75,10 +75,10 @@ def get_user_following_id_list(user_following_page):
 
 # user_name_regex = r'(?<=<span class="ProfileHeader-name">).{0,30}(?=</span>)'
 # user_name_pattern = re.compile(user_name_regex)
-# # <span class="RichText ProfileHeader-headline">FXXK MY CAR节目主持人  |  old school</span>
+
 # user_headline_regex = r'(?<=<span class="RichText ProfileHeader-headline">).{0,50}(?=</span>)'
 # user_headline_pattern = re.compile(user_headline_regex)
-# # <span><!-- react-text: 1181 -->现居<!-- /react-text --><!-- react-text: 1182 -->上海<!-- /react-text --></span>
+
 # user_location_regex = r'(?<=<span><!-- react-text: \d{2,6} -->现居<!-- /react-text --><!-- react-text: \d{2,6} -->)' \
 #                       r'.{0,20}' \
 #                       r'(?=<!-- /react-text --></span>)'
@@ -150,17 +150,16 @@ if __name__ == '__main__':
         print("OK")
     else:
         session = login.login(session)
-    user_data_dict = get_user_data_dict(session, "9ffd5c016aabeafd1030e63fe410beb8")
-    print(user_data_dict)
+    user_data_dict = get_user_data_dict(session, "ee99737ba14d20fcc7a131b5065c44fa")
+    # user_data_dict = get_user_data_dict(session, "d165a15d55a226dc33002aa19b299631")
     user_url_token = get_user_url_token(user_data_dict)
-    print(user_url_token)
 
     user_following_page = get_user_following_page(session, user_url_token)
-    # print(user_following_page)
     user_following_id_list = get_user_following_id_list(user_following_page)
     print(user_following_id_list)
 
     user_info = get_user_info(user_data_dict, user_following_page)
-    print(user_info)
+    # print(user_info)
+    # print(user_following_page)
 
 
