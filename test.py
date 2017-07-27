@@ -12,14 +12,17 @@ from threading import Thread
 from queue import Queue
 my_queue = Queue()
 
+count = 0
 
 class MyThread1(Thread):
     def __init__(self):
         Thread.__init__(self)
 
     def run(self):
-        # put_data = "you producer data"
-        # my_queue.put(put_data)
+        global count
+        for i in range(10):
+            count += 1
+            print("t1:", count)
         pass
 
 
@@ -28,8 +31,10 @@ class MyThread2(Thread):
         Thread.__init__(self)
 
     def run(self):
-        get_data = my_queue.get()
-        print(get_data)
+        global count
+        for i in range(10):
+            count += 1
+            print("t2:", count)
         pass
 
 
