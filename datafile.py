@@ -5,7 +5,6 @@ Required
 - requests
 Info
 - author : "moran"
-- email  : "moranzcw@gmail.com"
 - github : "moranzcw@gmail.com"
 - date   : "2017.7.24"
 """

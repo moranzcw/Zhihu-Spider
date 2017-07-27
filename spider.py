@@ -3,15 +3,15 @@
 """
 Required
 - requests
+- bs4 (Beautiful Soup)
 Info
 - author : "moran"
-- email  : "moranzcw@gmail.com"
 - github : "moranzcw@gmail.com"
-- date   : "2017.7.24"
+- date   : "2017.7.27"
 """
 import requests
-import re
 from bs4 import BeautifulSoup
+import json
 import login
 
 headers = {
@@ -23,143 +23,48 @@ headers = {
 }
 
 
-# 1. GET USER URL TOKEN
-
-def get_user_data_dict(session, user_id):
-    # Access the user data in json.
-    user_data_url = "https://www.zhihu.com/api/v4/members/" + user_id
-    response = session.get(user_data_url, headers=headers)
-
-    # Format the json data into a dict.
-    user_data_dict = dict()
-    if response.status_code == 200:
-        try:
-            user_data_dict = response.json()
-        except:
-            return user_data_dict
-    return user_data_dict
-
-
-def get_user_url_token(user_data_dict):
-    # Get user url token.
-    try:
-        user_url_token = user_data_dict['url_token']
-    except:
-        return ''
-    return user_url_token
-
-
-# 2. GET USER FOLLOWING LIST
-
-user_id_regex = r'(?<=api/v4/people/).{32}'
-user_id_pattern = re.compile(user_id_regex)
-
-
-def get_user_following_page(session, user_url_token):
+def get_user_data_json(session, user_url_token):
     # Access the user following page.
     user_following_url = "https://www.zhihu.com/people/" + user_url_token + "/following"
     response = session.get(user_following_url, headers=headers)
+    data_json = dict()
     if response.status_code == 200:
-        return response.text
-    return ''
+        try:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            data_json_text = soup.body.contents[1].attrs['data-state']
+            data_json = json.loads(data_json_text)
+        except:
+            data_json = json.loads('')
+    return data_json
 
 
-def get_user_following_id_list(user_following_page):
-    # Parse out the following list from the page.
-    user_following_id_list = user_id_pattern.findall(user_following_page)
-    user_following_id_list = list(set(user_following_id_list))
-    return user_following_id_list
-
-
-# 3. GET USER INFORMATION
-
-# user_name_regex = r'(?<=<span class="ProfileHeader-name">).{0,30}(?=</span>)'
-# user_name_pattern = re.compile(user_name_regex)
-
-# user_headline_regex = r'(?<=<span class="RichText ProfileHeader-headline">).{0,50}(?=</span>)'
-# user_headline_pattern = re.compile(user_headline_regex)
-
-# user_location_regex = r'(?<=<span><!-- react-text: \d{2,6} -->现居<!-- /react-text --><!-- react-text: \d{2,6} -->)' \
-#                       r'.{0,20}' \
-#                       r'(?=<!-- /react-text --></span>)'
-# user_location_pattern = re.compile(user_location_regex)
-# # <span><!-- react-text: 1049 -->现居<!-- /react-text --><!-- react-text: 1050 -->ghjgj<!-- /react-text --></span>
-# user_occupation_regex = r'(?<=<span class="ProfileHeader-name">).{0,30}(?=</span>)'
-# user_occupation_pattern = re.compile(user_occupation_regex)
-#
-# user_education_regex = r'(?<=<span class="ProfileHeader-name">).{0,30}(?=</span>)'
-# user_education_pattern = re.compile(user_education_regex)
-#
-# user_profile_regex = r'(?<=<span class="ProfileHeader-name">).{0,30}(?=</span>)'
-# user_profile_pattern = re.compile(user_profile_regex)
-
-
-def get_user_info(user_data_dict, user_following_page):
-    # Get user information.
-    user_info = dict()
+def get_user_following_list(user_data_json, user_url_token):
     try:
-        user_info['id'] = user_data_dict['id']
-        user_info['url_token'] = user_data_dict['url_token']
-        user_info['name'] = user_data_dict['name']
-        user_info['headline'] = user_data_dict['headline']
-        user_info['avatar_url'] = user_data_dict['avatar_url']
+        user_following_list = user_data_json['people']['followingByUser'][user_url_token]['ids']
+        temp_set = set(user_following_list)
+        temp_set.remove(None)
+        user_following_list = list(temp_set)
     except:
-        return dict()
+        user_following_list = list()
+    return user_following_list
 
-    # Get user name.
-    # try:
-    #     user_info['name'] = user_name_parttern.findall(user_following_page)[0]
-    # except:
-    #     user_info['name'] = ''
 
-    # try:
-    #     user_info['headline'] = user_headline_pattern.findall(user_following_page)[0]
-    # except:
-    #     user_info['headline'] = ''
-
-    # try:
-    #     user_info['location'] = user_location_pattern.findall(user_following_page)[0]
-    # except:
-    #     user_info['location'] = ''
-
-    # try:
-    #     user_info['occupation'] = user_occupation_pattern.findall(user_following_page)[0]
-    # except:
-    #     user_info['occupation'] = ''
-    #
-    # try:
-    #     user_info['education'] = user_education_pattern.findall(user_following_page)[0]
-    # except:
-    #     user_info['education'] = ''
-    #
-    # try:
-    #     user_info['profile'] = user_profile_pattern.findall(user_following_page)[0]
-    # except:
-    #     user_info['profile'] = ''
-
-    # print(user_following_page)
-    soup = BeautifulSoup(user_following_page)
-    print(soup.prettify())
-    return user_info
+def get_user_info(user_data_json, user_url_token):
+    try:
+        user_data = user_data_json['entities']['users'][user_url_token]
+        user_data_json_text = json.dumps(user_data)
+    except:
+        return ''
+    return user_data_json_text
 
 
 if __name__ == '__main__':
     session = requests.session()
     session = login.load_cookie(session)
-    if login.is_login(session):
-        print("OK")
-    else:
+    if not login.is_login(session):
         session = login.login(session)
-    user_data_dict = get_user_data_dict(session, "ee99737ba14d20fcc7a131b5065c44fa")
-    # user_data_dict = get_user_data_dict(session, "d165a15d55a226dc33002aa19b299631")
-    user_url_token = get_user_url_token(user_data_dict)
 
-    user_following_page = get_user_following_page(session, user_url_token)
-    user_following_id_list = get_user_following_id_list(user_following_page)
-    print(user_following_id_list)
-
-    user_info = get_user_info(user_data_dict, user_following_page)
-    # print(user_info)
-    # print(user_following_page)
-
-
+    user_url_token = "moranzcw"
+    user_data_json = get_user_data_json(session, user_url_token)
+    user_following_list = get_user_following_list(user_data_json, user_url_token)
+    user_info = get_user_info(user_data_json, user_url_token)
