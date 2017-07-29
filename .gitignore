@@ -1,5 +1,6 @@
 *.csv
 *.html
 *.json
+*.jpg
 cookies
 __pycache__
