@@ -32,14 +32,14 @@ class ZhihuSession(requests.Session):
         requests.Session.__init__(self)
         self.cookies = LWPCookieJar(filename='cookies')
 
-        if self.load_cookie() and self.is_login():
+        if self.__load_cookie() and self.__is_login():
             print("You have already logged in.")
         else:
             # Try to log in until you succeed.
             while not self.login():
                 pass
 
-    def load_cookie(self):
+    def __load_cookie(self):
         """Load cookie from file.
 
         Parameters:
@@ -54,7 +54,7 @@ class ZhihuSession(requests.Session):
             return False
         return True
 
-    def save_cookie(self):
+    def __save_cookie(self):
         """Save cookie to file.
         """
         try:
@@ -63,7 +63,7 @@ class ZhihuSession(requests.Session):
             return False
         return True
 
-    def is_login(self):
+    def __is_login(self):
         """Confirm you've logged in or not by checking the user's information page.
 
         Parameters:
@@ -79,7 +79,7 @@ class ZhihuSession(requests.Session):
             return True
         return False
 
-    def get_xsrf(self):
+    def __get_xsrf(self):
         """Get dynamic _xsrf code from zhihu.com
 
         Parameters:
@@ -93,7 +93,7 @@ class ZhihuSession(requests.Session):
         _xsrf = re.findall(regex, index_page.text)
         return _xsrf[0]
 
-    def get_captcha(self):
+    def __get_captcha(self):
         """Get captcha image from log in page.
 
         Parameters:
@@ -120,7 +120,7 @@ class ZhihuSession(requests.Session):
             session - a requests lib session
         """
         # Get _xsrf code.
-        _xsrf = self.get_xsrf()
+        _xsrf = self.__get_xsrf()
         headers["X-Xsrftoken"] = _xsrf
         headers["X-Requested-With"] = "XMLHttpRequest"
 
@@ -147,19 +147,19 @@ class ZhihuSession(requests.Session):
                 return False
 
         # Get Captcha.
-        captcha_filepath = self.get_captcha()
+        captcha_filepath = self.__get_captcha()
         print("Find the captcha.jpg in directory \"%s\" and input captcha code." % captcha_filepath)
         postdata["captcha"] = input("please input the captcha\n>")
 
         # Log in.
-        login_response = self.post(post_url, data=postdata, headers=headers)
+        login_response = self.__post(post_url, data=postdata, headers=headers)
         login_code = login_response.json()
         print(login_code['msg'])
         if not login_code['r'] == 0:
             return False
 
         # Save cookie.
-        self.save_cookie()
+        self.__save_cookie()
         return True
 
 if __name__ == '__main__':

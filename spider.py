@@ -12,7 +12,7 @@ Info
 import requests
 from bs4 import BeautifulSoup
 import json
-import zhihusession
+from zhihusession import ZhihuSession
 
 headers = {
     "Host": "www.zhihu.com",
@@ -59,7 +59,7 @@ def get_user_info(page_json, user_url_token):
 
 
 if __name__ == '__main__':
-    session = zhihusession()
+    session = ZhihuSession()
 
     user_url_token = "moranzcw"
     user_data_json = get_page_json(session, user_url_token)
