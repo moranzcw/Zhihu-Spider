@@ -26,7 +26,6 @@ headers = {
                   "Chrome/59.0.3071.115 Safari/537.36"
 }
 
-
 class ZhihuSession(requests.Session):
     def __init__(self):
         requests.Session.__init__(self)

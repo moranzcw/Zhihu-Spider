@@ -12,46 +12,64 @@ import threading
 import csv
 import os
 
-FILELOCK = threading.Lock()  # Mutex lock for reading and writing csv files.
-MAXROW = 100000  # Maximum number of rows in one csv file.
+FILELOCK = threading.RLock()  # Mutex lock for reading and writing csv files.
+MAXSIZE = 100 * 1024 * 1024  # Maximum size of one csv file - 100MB.
 TABLEHEADER = ['user_url_token', 'user_data_json']
+
 
 class DataFile:
     def __init__(self):
         self.__filepath = os.path.join(os.path.abspath('.'), 'datafile')
-        self.__prefix = os.path.join(os.path.abspath('.'), 'data')
+        self.__prefix = os.path.join(self.__filepath, 'data')
         self.__suffix = '.csv'
         self.__currentfile = ''
-        self.__currentfilerows = 0
+        self.__updatecurrentfile()
         pass
 
-    def __createdatafile(self):
-        if not os.path.exists(self.__data_path):
-            os.mkdir(self.__data_path)
+    def __updatecurrentfile(self):
+        """Traverse every csv file to find a unfilled csvfile as currentfile.
+        if such a file doesn't exist, create a new csv file.
 
-        i = 1
-        while i:
-            filename = self.__prefix + ("%3d" % i) + self.__suffix
-            if not os.path.exists(filename):
-                # Create a csv file, and write in table header.
-                FILELOCK.acquire()
+        Parameters:
+            None.
+
+        Returns:
+            None.
+        """
+        if os.path.exists(self.__currentfile) and os.path.getsize(self.__currentfile) < MAXSIZE:
+            return
+
+        if not os.path.exists(self.__filepath):
+            os.mkdir(self.__filepath)
+
+        FILELOCK.acquire()
+        i = 0
+        while True:
+            i += 1
+            # generate a filename.
+            filename = self.__prefix + ("%04d" % i) + self.__suffix
+
+            if os.path.exists(filename):
+                if os.path.getsize(filename) < MAXSIZE:
+                    # if the file exists and the file is unfilled, set the file to currentfile.
+                    self.__currentfile = filename
+                    break
+                else:
+                    continue
+            else:
+                # if the file doesn't exists, Create a new csv file, and write table header in.
                 with open(filename, 'w', newline='') as csvfile:
-                    writer = csv.DictWriter(csvfile, TABLEHEADER)
+                    # Create table header.
                     headerrow = dict()
                     for x in TABLEHEADER:
                         headerrow[x] = x
+                    # Write in.
+                    writer = csv.DictWriter(csvfile, TABLEHEADER)
                     writer.writerow(headerrow)
                 self.__currentfile = filename
-                self.__currentfilerows = 0
-                FILELOCK.release()
                 break
-            i += 1
-        return self.__currentfile
-
-    def __getcurrentfile(self):
-        if self.__currentfile == '' or self.__currentfilerows >= MAXROW:
-            return self.__createdatafile()
-        return self.__currentfile
+        FILELOCK.release()
+        return
 
     def __getfilelist(self):
         if not os.path.exists(self.__filepath):
@@ -88,32 +106,30 @@ class DataFile:
 
         return usercrawled
 
-    def add_user_info(self, userinfo):
+    def adduserinfo(self, userinfo):
         FILELOCK.acquire()
-        filename = self.__getcurrentfile()
-        with open(filename, 'a', newline='') as csvfile:
+        self.__updatecurrentfile()
+        with open(self.__currentfile, 'a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, TABLEHEADER)
             writer.writerow(userinfo)
-        self.__currentfilerows += 1
         FILELOCK.release()
-
         return True
 
-    def add_user_info_in_bulk(self, userinfolist):
+    def adduserinfobatch(self, userinfolist):
         FILELOCK.acquire()
-        filename = self.__getcurrentfile()
-        with open(filename, 'a', newline='') as csvfile:
+        self.__updatecurrentfile()
+        with open(self.__currentfile, 'a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, TABLEHEADER)
-            rowcounter = 0
             for userinfo in userinfolist:
                 writer.writerow(userinfo)
-                self.__currentfilerows += 1
-                rowcounter += 1
-                if self.__currentfilerows >= MAXROW:
-                    break
         FILELOCK.release()
-        return rowcounter
+        return True
+
 
 df = DataFile()
-# df.create_datafile()
 print(df.getusercrawled())
+df.adduserinfobatch([{'user_url_token': 'u11', 'user_data_json': 'json11'},
+                {'user_url_token': 'u12', 'user_data_json': 'json12'},
+                {'user_url_token': 'u13', 'user_data_json': 'json13'},
+                {'user_url_token': 'u14', 'user_data_json': 'json14'}])
+
