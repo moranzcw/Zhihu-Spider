@@ -33,6 +33,8 @@ class ZhihuSession(requests.Session):
         requests.Session.__init__(self)
         self.cookies = LWPCookieJar(filename='cookies')
 
+        print('coo' + str(self.__loadcookie()))
+        print('lo' + str(self.__islogin()))
         if self.__loadcookie() and self.__islogin():
             print("You have already logged in.")
             return
@@ -96,9 +98,13 @@ class ZhihuSession(requests.Session):
         Returns:
             string - _xsrf code
         """
-        index_page = self.get('https://www.zhihu.com', headers=headers)
-        regex = r'name="_xsrf" value="(.*?)"'
-        _xsrf = re.findall(regex, index_page.text)
+        while True:
+            index_page = self.get('https://www.zhihu.com', headers=headers)
+            regex = r'name="_xsrf" value="(.*?)"'
+            _xsrf = re.findall(regex, index_page.text)
+            if len(_xsrf) > 0:
+                break
+            print('failed')
         return _xsrf[0]
 
     def __getcaptcha(self):
@@ -160,7 +166,7 @@ class ZhihuSession(requests.Session):
         postdata["captcha"] = input("please input the captcha\n>")
 
         # Log in.
-        loginresponse = self.__post(posturl, data=postdata, headers=headers)
+        loginresponse = self.post(posturl, data=postdata, headers=headers)
         logincode = loginresponse.json()
         print(logincode['msg'])
         if not logincode['r'] == 0:
@@ -169,6 +175,6 @@ class ZhihuSession(requests.Session):
         # Save cookie.
         self.__savecookie()
         return True
-
-if __name__ == '__main__':
-    session = ZhihuSession()
+#
+# if __name__ == '__main__':
+#     session = ZhihuSession()
