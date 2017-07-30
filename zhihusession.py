@@ -12,7 +12,7 @@ import requests
 import re
 import time
 import os.path
-
+import threading
 try:
     from cookielib import LWPCookieJar
 except:
@@ -25,20 +25,25 @@ headers = {
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/59.0.3071.115 Safari/537.36"
 }
+FILELOCK = threading.RLock()  # Mutex lock for cookie file.
+
 
 class ZhihuSession(requests.Session):
     def __init__(self):
         requests.Session.__init__(self)
         self.cookies = LWPCookieJar(filename='cookies')
 
-        if self.__load_cookie() and self.__is_login():
+        if self.__loadcookie() and self.__islogin():
             print("You have already logged in.")
-        else:
-            # Try to log in until you succeed.
-            while not self.login():
-                pass
+            return
 
-    def __load_cookie(self):
+        # Try to log in until you succeed.
+        while True:
+            if self.login():
+                break
+        return
+
+    def __loadcookie(self):
         """Load cookie from file.
 
         Parameters:
@@ -48,21 +53,25 @@ class ZhihuSession(requests.Session):
             bool - cookie has successfully loaded or not
         """
         try:
+            FILELOCK.acquire()
             self.cookies.load(ignore_discard=True)
+            FILELOCK.release()
         except:
             return False
         return True
 
-    def __save_cookie(self):
+    def __savecookie(self):
         """Save cookie to file.
         """
         try:
+            FILELOCK.acquire()
             self.cookies.save()
+            FILELOCK.release()
         except:
             return False
         return True
 
-    def __is_login(self):
+    def __islogin(self):
         """Confirm you've logged in or not by checking the user's information page.
 
         Parameters:
@@ -73,12 +82,12 @@ class ZhihuSession(requests.Session):
         """
         url = "https://www.zhihu.com/settings/profile"
         response = self.get(url, headers=headers, allow_redirects=False)
-        login_code = response.status_code
-        if login_code == 200:
+        logincode = response.status_code
+        if logincode == 200:
             return True
         return False
 
-    def __get_xsrf(self):
+    def __getxsrf(self):
         """Get dynamic _xsrf code from zhihu.com
 
         Parameters:
@@ -92,7 +101,7 @@ class ZhihuSession(requests.Session):
         _xsrf = re.findall(regex, index_page.text)
         return _xsrf[0]
 
-    def __get_captcha(self):
+    def __getcaptcha(self):
         """Get captcha image from log in page.
 
         Parameters:
@@ -102,8 +111,8 @@ class ZhihuSession(requests.Session):
             string - captcha image file path
         """
         t = str(int(time.time() * 1000))
-        captcha_url = 'https://www.zhihu.com/captcha.gif?r=' + t + "&type=login"
-        r = self.get(captcha_url, headers=headers)
+        captchaurl = 'https://www.zhihu.com/captcha.gif?r=' + t + "&type=login"
+        r = self.get(captchaurl, headers=headers)
         with open('captcha.jpg', 'wb') as f:
             f.write(r.content)
             f.close()
@@ -119,7 +128,7 @@ class ZhihuSession(requests.Session):
             session - a requests lib session
         """
         # Get _xsrf code.
-        _xsrf = self.__get_xsrf()
+        _xsrf = self.__getxsrf()
         headers["X-Xsrftoken"] = _xsrf
         headers["X-Requested-With"] = "XMLHttpRequest"
 
@@ -134,31 +143,31 @@ class ZhihuSession(requests.Session):
         # Infer that the account is a phone number or an email.
         if re.match(r"^1\d{10}$", account):
             # Log in with phone number.
-            post_url = 'https://www.zhihu.com/login/phone_num'
+            posturl = 'https://www.zhihu.com/login/phone_num'
             postdata['phone_num'] = account
         else:
             if "@" in account:
                 # Log in with email.
-                post_url = 'https://www.zhihu.com/login/email'
+                posturl = 'https://www.zhihu.com/login/email'
                 postdata['email'] = account
             else:
                 print("Account error, please log in again.")
                 return False
 
         # Get Captcha.
-        captcha_filepath = self.__get_captcha()
+        captcha_filepath = self.__getcaptcha()
         print("Find the captcha.jpg in directory \"%s\" and input captcha code." % captcha_filepath)
         postdata["captcha"] = input("please input the captcha\n>")
 
         # Log in.
-        login_response = self.__post(post_url, data=postdata, headers=headers)
-        login_code = login_response.json()
-        print(login_code['msg'])
-        if not login_code['r'] == 0:
+        loginresponse = self.__post(posturl, data=postdata, headers=headers)
+        logincode = loginresponse.json()
+        print(logincode['msg'])
+        if not logincode['r'] == 0:
             return False
 
         # Save cookie.
-        self.__save_cookie()
+        self.__savecookie()
         return True
 
 if __name__ == '__main__':

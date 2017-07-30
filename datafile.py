@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Required
-- requests
 Info
 - author : "moran"
 - github : "moranzcw@gmail.com"
@@ -10,7 +8,7 @@ Info
 """
 import threading
 import csv
-import os
+import os.path
 
 FILELOCK = threading.RLock()  # Mutex lock for reading and writing csv files.
 MAXSIZE = 100 * 1024 * 1024  # Maximum size of one csv file - 100MB.

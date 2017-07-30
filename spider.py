@@ -12,6 +12,8 @@ Info
 import requests
 from bs4 import BeautifulSoup
 import json
+import threading
+import queue
 from zhihusession import ZhihuSession
 
 headers = {
@@ -65,3 +67,4 @@ if __name__ == '__main__':
     user_data_json = get_page_json(session, user_url_token)
     user_following_list = get_user_following_list(user_data_json, user_url_token)
     user_info = get_user_info(user_data_json, user_url_token)
+

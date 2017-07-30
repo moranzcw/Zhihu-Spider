@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Required
-- requests
 Info
 - author : "moran"
 - github : "moranzcw@gmail.com"
@@ -10,19 +8,22 @@ Info
 """
 from threading import Thread
 from queue import Queue
+import time
+
 my_queue = Queue()
 
 count = 0
+
 
 class MyThread1(Thread):
     def __init__(self):
         Thread.__init__(self)
 
     def run(self):
-        global count
-        for i in range(10):
-            count += 1
-            print("t1:", count)
+        for i in range(100):
+            my_queue.put(str(i))
+            print("Thread1 put in.")
+            time.sleep(1)
         pass
 
 
@@ -31,10 +32,9 @@ class MyThread2(Thread):
         Thread.__init__(self)
 
     def run(self):
-        global count
-        for i in range(10):
-            count += 1
-            print("t2:", count)
+        for i in range(100):
+            a = my_queue.get()
+            print("Thread2 get " + a)
         pass
 
 
