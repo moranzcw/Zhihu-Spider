@@ -27,7 +27,7 @@ def loadusertobecrawled():
         return usertobecrawled
 
     USERTOBECRAWLED_FILELOCK.acquire()
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding='utf-8') as file:
         for line in file.readlines():
             line = line.strip('\n')
             usertobecrawled.append(line)
@@ -43,7 +43,7 @@ def saveusertobecrawled(usertobecrawled):
     filename = os.path.join(FILEPATH, USERTOBECRAWLED_FILENAME)
 
     USERTOBECRAWLED_FILELOCK.acquire()
-    with open(filename, 'w', newline='') as file:
+    with open(filename, 'w', newline='', encoding='utf-8') as file:
         for token in usertobecrawled:
             file.write(token+'\n')
     USERTOBECRAWLED_FILELOCK.release()
@@ -70,14 +70,14 @@ def loadusercrawled():
     for filename in os.listdir(FILEPATH):
         filename = os.path.join(FILEPATH, filename)
         if os.path.splitext(filename)[1] == SUFFIX:
-            with open(filename, 'r') as csvfile:
+            with open(filename, 'r', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
                 if reader.fieldnames == TABLEHEADER:
                     csvfilelist.append(os.path.join(FILEPATH, filename))
 
     # Read in every url token from every csv file.
     for filename in csvfilelist:
-        with open(filename, 'r') as csvfile:
+        with open(filename, 'r', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 usercrawled.append(row[TABLEHEADER[0]])
@@ -121,7 +121,7 @@ class DataFile:
                     continue
             else:
                 # if the file doesn't exists, Create a new csv file, and write table header in.
-                with open(filename, 'w', newline='') as csvfile:
+                with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
                     # Create table header.
                     headerrow = dict()
                     for x in TABLEHEADER:
@@ -144,7 +144,7 @@ class DataFile:
     def saveinfo(self, userinfo):
         FILELOCK.acquire()
         filename = self.__getcurrentfile()
-        with open(filename, 'a', newline='') as csvfile:
+        with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, TABLEHEADER)
             writer.writerow(userinfo)
         FILELOCK.release()
@@ -153,7 +153,7 @@ class DataFile:
     def saveinfobatch(self, userinfolist):
         FILELOCK.acquire()
         filename = self.__getcurrentfile()
-        with open(filename, 'a', newline='') as csvfile:
+        with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, TABLEHEADER)
             for userinfo in userinfolist:
                 writer.writerow(userinfo)
