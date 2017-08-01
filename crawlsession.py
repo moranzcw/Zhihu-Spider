@@ -12,9 +12,6 @@ Info
 import requests
 from bs4 import BeautifulSoup
 import json
-import threading
-import queue
-from zhihusession import ZhihuSession
 
 headers = {
     "Host": "www.zhihu.com",
@@ -25,25 +22,28 @@ headers = {
 }
 
 
-class CrawlSession(ZhihuSession):
+class CrawlSession(requests.Session):
     def __init__(self):
-        ZhihuSession.__init__(self)
+        requests.Session.__init__(self)
         self.__currenttoken = ''
         self.__currentjson = {}
 
     def __getpagejson(self, urltoken):
         user_following_url = "https://www.zhihu.com/people/" + urltoken + "/following"
-        response = self.get(user_following_url, headers=headers)
-
-        if response.status_code == 200:
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                pagejson_text = soup.body.contents[1].attrs['data-state']
-                pagejson = json.loads(pagejson_text)
-            except:
+        try:
+            response = self.get(user_following_url, headers=headers)
+            if response.status_code == 200:
+                try:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    pagejson_text = soup.body.contents[1].attrs['data-state']
+                    pagejson = json.loads(pagejson_text)
+                except:
+                    pagejson = dict()
+            else:
                 pagejson = dict()
-        else:
+        except:
             pagejson = dict()
+
         self.__currenttoken = urltoken
         self.__currentjson = pagejson
         return pagejson

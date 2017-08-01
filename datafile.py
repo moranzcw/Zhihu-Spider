@@ -162,14 +162,6 @@ class DataFile:
 
 
 if __name__ == '__main__':
-    # df = DataFile()
-    # print(loadusercrawled())
-    # df.saveinfobatch([{'user_url_token': 'u11', 'user_data_json': 'json11'},
-    #                 {'user_url_token': 'u12', 'user_data_json': 'json12'},
-    #                 {'user_url_token': 'u13', 'user_data_json': 'json13'},
-    #                 {'user_url_token': 'u14', 'user_data_json': 'json14'}])
-    # aa = ['u1', 'u12', 'u12', 'u13']
-
-    ff = loadusertobecrawled()
+    ff = loadusercrawled()
     print(ff)
-    saveusertobecrawled(ff)
+    # saveusertobecrawled(ff)

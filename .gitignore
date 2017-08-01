@@ -2,5 +2,7 @@
 *.html
 *.json
 *.jpg
+datafile
 cookies
+.idea
 __pycache__

@@ -13,7 +13,7 @@ from crawlsession import CrawlSession
 import datafile
 
 tobecrawled_queue = Queue(maxsize=100000)
-crawled_queue = Queue()
+response_queue = Queue()
 
 
 class MasterThread(Thread):
@@ -23,6 +23,7 @@ class MasterThread(Thread):
     def run(self):
         # Load crawled users from file, and create a crawled users set.
         usercrawled_list = datafile.loadusercrawled()
+        print(len(usercrawled_list))
         crawled_set = set(usercrawled_list)
 
         # Load 'uncrawled' users from file in last time, and create a 'to be crawled' users set.
@@ -42,24 +43,37 @@ class MasterThread(Thread):
         crawledcount = len(usercrawled_list)
 
         while crawledcount < 10000000:
-            crawleditem = crawled_queue.get()
+            resposeitem = response_queue.get()
 
             # Confirm a crawled user.
-            crawled_set.add(crawleditem['user_url_token'])
-            tobecrawled_set.remove(crawleditem['user_url_token'])
-            crawledcount += 1
+            if resposeitem['state'] == 'OK':
+                crawled_set.add(resposeitem['user_url_token'])
+                tobecrawled_set.remove(resposeitem['user_url_token'])
+                crawledcount += 1
+            else:
+                tobecrawled_set.remove(resposeitem['user_url_token'])
 
             # Filter the followinglist.
-            followinglist = crawleditem['user_following_list']
+            followinglist = resposeitem['user_following_list']
             for token in followinglist:
                 if token in crawled_set or token in tobecrawled_set:
+                    print(token)
                     continue
                 else:
                     try:
-                        tobecrawled_queue.put_nowait(token)
+                        tobecrawled_queue.put(token)
                         tobecrawled_set.add(token)
+
                     except:
                         continue
+
+            print('User: ' + resposeitem['user_url_token']
+                  + ', State: ' + resposeitem['state']
+                  + ', Data length: ' + str(resposeitem['length'])
+                  + ', following: ' + str(len(resposeitem['user_following_list'])))
+            print('Crawled user: ' + str(len(crawled_set))
+                  + ', tobecrawled_queue: ' + str(tobecrawled_queue.qsize())
+                  + ', Data response_queue: ' + str(response_queue.qsize()))
 
             # Save crawled users every 30 seconds.
             curtime = time.time()
@@ -85,19 +99,28 @@ class WorkerThread(Thread):
             except:
                 break
 
-            info = session.getinfo(token)
-            df.saveinfo(info)
-
             followinglist = session.getfollowinglist(token)
-            crawleditem = {'user_url_token': token, 'user_following_list': followinglist}
-            crawled_queue.put(crawleditem)
+            info = session.getinfo(token)
+
+            resposeitem = {'user_url_token': token,
+                           'user_following_list': followinglist
+                           }
+            if len(info['user_data_json']) == 0:
+                resposeitem['state'] = 'Cannot_Obtain'
+                resposeitem['length'] = 0
+            else:
+                df.saveinfo(info)
+                resposeitem['state'] = 'OK'
+                resposeitem['length'] = len(info['user_data_json'])
+
+            response_queue.put(resposeitem)
         print("Worker thread exited.")
 
 if __name__ == '__main__':
     master_thread = MasterThread()
 
     worker_list = []
-    for i in range(2):
+    for i in range(5):
         worker_thread = WorkerThread()
         worker_list.append(worker_thread)
 
