@@ -25,52 +25,45 @@ headers = {
 class CrawlSession(requests.Session):
     def __init__(self):
         requests.Session.__init__(self)
-        self.__currenttoken = ''
-        self.__currentjson = {}
 
     def __getpagejson(self, urltoken):
         user_following_url = "https://www.zhihu.com/people/" + urltoken + "/following"
         try:
             response = self.get(user_following_url, headers=headers)
             if response.status_code == 200:
-                try:
-                    soup = BeautifulSoup(response.text, 'html.parser')
-                    pagejson_text = soup.body.contents[1].attrs['data-state']
-                    pagejson = json.loads(pagejson_text)
-                except:
-                    pagejson = dict()
+                soup = BeautifulSoup(response.text, 'html.parser')
+                pagejson_text = soup.body.contents[1].attrs['data-state']
+                pagejson = json.loads(pagejson_text)
             else:
                 pagejson = dict()
         except:
             pagejson = dict()
 
-        self.__currenttoken = urltoken
-        self.__currentjson = pagejson
         return pagejson
 
-    def getfollowinglist(self, urltoken):
-        if urltoken != self.__currenttoken:
-            self.__getpagejson(urltoken)
+    def getinfo(self, urltoken):
+        pagejson = self.__getpagejson(urltoken)
 
+        # 提取该用户的关注用户列表
         try:
-            followinglist = self.__currentjson['people']['followingByUser'][urltoken]['ids']
+            followinglist = pagejson['people']['followingByUser'][urltoken]['ids']
             tempset = set(followinglist)
             tempset.remove(None)
             followinglist = list(tempset)
+            followinglist = json.dumps({'ids': followinglist})
         except:
-            followinglist = list()
+            followinglist = json.dumps({'ids': list()})
 
-        return followinglist
-
-    def getinfo(self, urltoken):
-        if urltoken != self.__currenttoken:
-            self.__getpagejson(urltoken)
-
+        # 提取该用户的信息，并转换为字符串
         try:
-            infojson = self.__currentjson['entities']['users'][urltoken]
-            info = {'user_url_token': urltoken, 'user_data_json': json.dumps(infojson)}
+            infojson = json.dumps(pagejson['entities']['users'][urltoken])
         except:
-            info = {'user_url_token': urltoken, 'user_data_json': ''}
+            infojson = ''
+
+        info = {'user_url_token': urltoken,
+                'user_data_json': infojson,
+                'user_following_list': followinglist
+                }
         return info
 
 

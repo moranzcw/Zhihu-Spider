@@ -9,6 +9,7 @@ Info
 import time
 from threading import Thread
 from queue import Queue
+import json
 from crawlsession import CrawlSession
 import datafile
 
@@ -21,20 +22,16 @@ class MasterThread(Thread):
         Thread.__init__(self)
 
     def run(self):
+        df = datafile.DataFile()
         # Load crawled users from file, and create a crawled users set.
-        usercrawled_list = datafile.loadusercrawled()
-        print(len(usercrawled_list))
+        usercrawled_list = df.loadusercrawled()
         crawled_set = set(usercrawled_list)
 
         # Load 'uncrawled' users from file in last time, and create a 'to be crawled' users set.
-        usertobecrawled_list = datafile.loadusertobecrawled()
-        tobecrawled_set = set()
-        if len(usertobecrawled_list) == 0:
-            usertobecrawled_list.append('excited-vczh')
+        usertobecrawled_list = df.loaduseruncrawled(crawled_set)
         for token in usertobecrawled_list:
             try:
                 tobecrawled_queue.put(token)
-                tobecrawled_set.add(token)
             except:
                 continue
 
@@ -48,39 +45,26 @@ class MasterThread(Thread):
             # Confirm a crawled user.
             if resposeitem['state'] == 'OK':
                 crawled_set.add(resposeitem['user_url_token'])
-                tobecrawled_set.remove(resposeitem['user_url_token'])
                 crawledcount += 1
-            else:
-                tobecrawled_set.remove(resposeitem['user_url_token'])
 
             # Filter the followinglist.
             followinglist = resposeitem['user_following_list']
             for token in followinglist:
-                if token in crawled_set or token in tobecrawled_set:
-                    print(token)
+                if token in crawled_set:
                     continue
                 else:
                     try:
                         tobecrawled_queue.put(token)
-                        tobecrawled_set.add(token)
-
                     except:
                         continue
 
             print('User: ' + resposeitem['user_url_token']
-                  + ', State: ' + resposeitem['state']
-                  + ', Data length: ' + str(resposeitem['length'])
+                  + ', State: ' + resposeitem['state'])
+            print('Data length: ' + str(resposeitem['length'])
                   + ', following: ' + str(len(resposeitem['user_following_list'])))
             print('Crawled user: ' + str(len(crawled_set))
                   + ', tobecrawled_queue: ' + str(tobecrawled_queue.qsize())
                   + ', Data response_queue: ' + str(response_queue.qsize()))
-
-            # Save crawled users every 30 seconds.
-            curtime = time.time()
-            if (curtime - lasttime) > 30:
-                lasttime = curtime
-                datafile.saveusertobecrawled(list(tobecrawled_set))
-
         print("Master thread exited.")
         pass
 
@@ -99,11 +83,11 @@ class WorkerThread(Thread):
             except:
                 break
 
-            followinglist = session.getfollowinglist(token)
             info = session.getinfo(token)
 
-            resposeitem = {'user_url_token': token,
-                           'user_following_list': followinglist
+            temp = json.loads(info['user_following_list'])
+            resposeitem = {'user_url_token': info['user_url_token'],
+                           'user_following_list': temp['ids']
                            }
             if len(info['user_data_json']) == 0:
                 resposeitem['state'] = 'Cannot_Obtain'
@@ -120,7 +104,7 @@ if __name__ == '__main__':
     master_thread = MasterThread()
 
     worker_list = []
-    for i in range(5):
+    for i in range(1):
         worker_thread = WorkerThread()
         worker_list.append(worker_thread)
 
