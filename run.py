@@ -15,42 +15,38 @@ import datafile
 
 tobecrawled_queue = Queue(maxsize=100000)
 response_queue = Queue()
+df = datafile.DataFile()
 
 
 class MasterThread(Thread):
     def __init__(self):
         Thread.__init__(self)
-
-    def run(self):
-        df = datafile.DataFile()
-        # Load crawled users from file, and create a crawled users set.
+        # 从文件读取已爬取用户的list，并转换为set，用户去重
         usercrawled_list = df.loadusercrawled()
-        crawled_set = set(usercrawled_list)
+        self.crawled_count = len(usercrawled_list)
+        self.crawled_set = set(usercrawled_list)
 
-        # Load 'uncrawled' users from file in last time, and create a 'to be crawled' users set.
-        usertobecrawled_list = df.loaduseruncrawled(crawled_set)
+        # 从文件读取待爬取用户的列表，并导入待爬取用户的queue
+        usertobecrawled_list = df.loaduseruncrawled(self.crawled_set)
         for token in usertobecrawled_list:
             try:
                 tobecrawled_queue.put(token)
             except:
                 continue
 
-        # Main loop.
-        lasttime = time.time()
-        crawledcount = len(usercrawled_list)
-
-        while crawledcount < 10000000:
+    def run(self):
+        while self.crawled_count < 10000000:
             resposeitem = response_queue.get()
 
             # Confirm a crawled user.
             if resposeitem['state'] == 'OK':
-                crawled_set.add(resposeitem['user_url_token'])
-                crawledcount += 1
+                self.crawled_set.add(resposeitem['user_url_token'])
+                self.crawled_count += 1
 
             # Filter the followinglist.
             followinglist = resposeitem['user_following_list']
             for token in followinglist:
-                if token in crawled_set:
+                if token in self.crawled_set:
                     continue
                 else:
                     try:
@@ -62,7 +58,7 @@ class MasterThread(Thread):
                   + ', State: ' + resposeitem['state'])
             print('Data length: ' + str(resposeitem['length'])
                   + ', following: ' + str(len(resposeitem['user_following_list'])))
-            print('Crawled user: ' + str(len(crawled_set))
+            print('Crawled user: ' + str(len(self.crawled_set))
                   + ', tobecrawled_queue: ' + str(tobecrawled_queue.qsize())
                   + ', Data response_queue: ' + str(response_queue.qsize()))
         print("Master thread exited.")
@@ -75,7 +71,6 @@ class WorkerThread(Thread):
 
     def run(self):
         session = CrawlSession()
-        df = datafile.DataFile()
 
         while True:
             try:

@@ -45,7 +45,6 @@ class DataFile(Singleton):
     """
     def __init__(self):
         self.FILEPATH = os.path.join(os.path.abspath('.'), 'datafile')
-        self.FILELOCK = threading.Lock()
         self.PREFIX = os.path.join(self.FILEPATH, 'data')
         self.SUFFIX = '.csv'
         self.MAXSIZE = 100 * 1024 * 1024
