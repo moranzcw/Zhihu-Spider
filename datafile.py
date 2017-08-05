@@ -13,7 +13,9 @@ import csv
 import os.path
 import json
 
+# 操作文件时使用的可重入互斥锁，用于保证线程安全
 FILELOCK = threading.Lock()
+
 
 class Singleton(object):
     """
@@ -36,7 +38,6 @@ class DataFile(Singleton):
 
     Attributes:
         FILEPATH: 存储数据文件（csv文件）的文件夹绝对路径
-        FILELOCK: 操作文件时使用的可重入互斥锁，用于保证线程安全
         PREFIX: 每个csv文件的文件名前缀，包含绝对路径。每个文件名由 “前缀” + 编号 + “后缀” 组成。
         SUFFIX: 每个csv文件的文件名后缀，即格式 '.csv'
         MAXSIZE: 每个csv文件的最大尺寸，单位Byte
@@ -91,7 +92,6 @@ class DataFile(Singleton):
                     usercrawled.append(row[self.TABLEHEADER[0]])
 
         FILELOCK.release()
-        print(len(usercrawled))
         return usercrawled
 
     def loaduseruncrawled(self, usercrawled_set):
@@ -134,7 +134,6 @@ class DataFile(Singleton):
         FILELOCK.release()
 
         if len(useruncrawled) == 0:
-            useruncrawled = list()
             useruncrawled.append('excited-vczh')
         return useruncrawled
 
@@ -274,12 +273,4 @@ class DataFile(Singleton):
 
 
 if __name__ == '__main__':
-    ul = {'ids': ['liaoxuefeng', 'sama-elly', 'langlang0614', 'li-lao-shu', 'zhanghui33']}
-    ul = json.dumps(ul)
-    userinfo = {'user_url_token': 'user1', 'user_data_json': 'data1', 'user_following_list': ul}
-    df = DataFile()
-    # df.saveinfo(userinfo)
-    ff = df.loaduseruncrawled({})
-    # print(ff)
-    # saveusertobecrawled(ff)
     pass

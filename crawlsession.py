@@ -17,9 +17,6 @@ import proxy
 headers = {
     "Host": "www.zhihu.com",
     "Referer": "https://www.zhihu.com/",
-    # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    #               "AppleWebKit/537.36 (KHTML, like Gecko) "
-    #               "Chrome/59.0.3071.115 Safari/537.36"
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063"
@@ -33,7 +30,8 @@ class CrawlSession(requests.Session):
     def __getpagejson(self, urltoken):
         user_following_url = "https://www.zhihu.com/people/" + urltoken + "/following"
         try:
-            response = self.get(user_following_url, headers=headers, proxies=proxy.proxies)
+            # response = self.get(user_following_url, headers=headers, proxies=proxy.proxies)
+            response = self.get(user_following_url, headers=headers)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 pagejson_text = soup.body.contents[1].attrs['data-state']
@@ -70,13 +68,7 @@ class CrawlSession(requests.Session):
         return info
 
 
-# if __name__ == '__main__':
-#     session = CrawlSession()
-#
-#     urltoken = "moranzcw"
-#     followinglist = session.getfollowinglist(urltoken)
-#     info = session.getinfo(urltoken)
-#
-#     print(followinglist)
-#     print(info)
+if __name__ == '__main__':
+    pass
+
 
