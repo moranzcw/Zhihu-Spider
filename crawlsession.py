@@ -12,15 +12,17 @@ Info
 import requests
 from bs4 import BeautifulSoup
 import json
+import proxy
 
 headers = {
     "Host": "www.zhihu.com",
     "Referer": "https://www.zhihu.com/",
     # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     #               "AppleWebKit/537.36 (KHTML, like Gecko) "
-    #               "Chrome/59.0.3071.115 Safari/37.36"
-
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063"
+    #               "Chrome/59.0.3071.115 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063"
 }
 
 
@@ -31,8 +33,7 @@ class CrawlSession(requests.Session):
     def __getpagejson(self, urltoken):
         user_following_url = "https://www.zhihu.com/people/" + urltoken + "/following"
         try:
-            response = self.get(user_following_url, headers=headers)
-            print(response.status_code)
+            response = self.get(user_following_url, headers=headers, proxies=proxy.proxies)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 pagejson_text = soup.body.contents[1].attrs['data-state']
@@ -46,7 +47,6 @@ class CrawlSession(requests.Session):
 
     def getinfo(self, urltoken):
         pagejson = self.__getpagejson(urltoken)
-        print(len(pagejson))
         # 提取该用户的关注用户列表
         try:
             followinglist = pagejson['people']['followingByUser'][urltoken]['ids']

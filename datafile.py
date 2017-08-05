@@ -91,7 +91,7 @@ class DataFile(Singleton):
                     usercrawled.append(row[self.TABLEHEADER[0]])
 
         FILELOCK.release()
-
+        print(len(usercrawled))
         return usercrawled
 
     def loaduseruncrawled(self, usercrawled_set):
@@ -113,20 +113,24 @@ class DataFile(Singleton):
                     reader = csv.DictReader(csvfile)
                     if reader.fieldnames == self.TABLEHEADER:
                         csvfilelist.append(os.path.join(self.FILEPATH, filename))
+        csvfilelist.sort()
 
         # 从上面的列表中，依次遍历每个文件，得到一个不超过100000个未爬取用户的列表。
         useruncrawled = list()
-        for filename in csvfilelist:
+        for filename in csvfilelist[::-1]:
+            if len(useruncrawled) >= 100000:
+                break
             with open(filename, 'r', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
-                # 按每行读取，取最后一列，即每个用户的关注列表
+                user_following_list = list()
                 for row in reader:
-                    user_following_list = json.loads(row[self.TABLEHEADER[2]])
-                    user_following_list = user_following_list['ids']
-                    # 若该用户不属于已爬取集合，且当前待爬取列表小于100000，就添加到列表中
-                    for user in user_following_list:
-                        if user not in usercrawled_set and len(useruncrawled) < 100000:
-                            useruncrawled.append(user)
+                    tempjson = json.loads(row[self.TABLEHEADER[2]])
+                    user_following_list += tempjson['ids']
+                for user in user_following_list[::-1]:
+                    if len(useruncrawled) >= 100000:
+                        break
+                    if user not in usercrawled_set:
+                        useruncrawled.append(user)
         FILELOCK.release()
 
         if len(useruncrawled) == 0:

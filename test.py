@@ -1,24 +1,30 @@
-import os
-import csv
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Info
+- author : "moran"
+- github : "moranzcw@gmail.com"
+- date   : "2017.7.24"
+"""
+from threading import Thread
+from crawlsession import CrawlSession
 
-filename = os.path.join(os.path.abspath('./datafile'), 'data0002.csv')
-# with open(filename, 'r') as csvfile:
-#     reader = csv.DictReader(csvfile)
-#     for row in reader:
-#         print(row['user_data_json'].encode("utf-8").decode('unicode_escape'))
 
+class WorkerThread(Thread):
+    def __init__(self):
+        Thread.__init__(self)
 
-TABLEHEADER = ['user_url_token'.encode('utf-8'), 'user_data_json'.encode('utf-8')]
-userinfo = {'user_url_token'.encode('utf-8'): "abcd".encode('utf-8'),
-            'user_data_json'.encode('utf-8'): 'abcd\u4f60\u597dabcd'.encode('utf-8')
-            }
-# with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
-#     writer = csv.writer(csvfile)
-#     writer.writerow(['死东风'])
+    def run(self):
+        pass
 
-with open(filename, 'a', newline='', encoding='utf-8') as file:
-        file.write('abcd\u4f60\u597d')
+if __name__ == '__main__':
 
-with open(filename, 'r', encoding='utf-8') as file:
-    for line in file.readlines():
-        print(line)
+    worker_list = []
+    for i in range(1):
+        worker_thread = WorkerThread()
+        worker_list.append(worker_thread)
+
+    for t in worker_list:
+        t.start()
+    for t in worker_list:
+        t.join()

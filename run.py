@@ -17,6 +17,10 @@ tobecrawled_queue = Queue(maxsize=100000)
 response_queue = Queue()
 df = datafile.DataFile()
 
+concurrent = 5
+threads_numbers = 5
+interval_time = concurrent/threads_numbers
+
 
 class MasterThread(Thread):
     def __init__(self):
@@ -25,12 +29,13 @@ class MasterThread(Thread):
         usercrawled_list = df.loadusercrawled()
         self.crawled_count = len(usercrawled_list)
         self.crawled_set = set(usercrawled_list)
-
+        print(len(self.crawled_set))
         # 从文件读取待爬取用户的列表，并导入待爬取用户的queue
         usertobecrawled_list = df.loaduseruncrawled(self.crawled_set)
         for token in usertobecrawled_list:
             try:
-                tobecrawled_queue.put(token)
+                tobecrawled_queue.put_nowait(token)
+                self.crawled_set.add(token)
             except:
                 continue
 
@@ -42,6 +47,9 @@ class MasterThread(Thread):
             if resposeitem['state'] == 'OK':
                 self.crawled_set.add(resposeitem['user_url_token'])
                 self.crawled_count += 1
+            else:
+                if resposeitem['user_url_token'] in self.crawled_set:
+                    self.crawled_set.remove(resposeitem['user_url_token'])
 
             # Filter the followinglist.
             followinglist = resposeitem['user_following_list']
@@ -50,7 +58,7 @@ class MasterThread(Thread):
                     continue
                 else:
                     try:
-                        tobecrawled_queue.put(token)
+                        tobecrawled_queue.put_nowait(token)
                     except:
                         continue
 
@@ -58,7 +66,7 @@ class MasterThread(Thread):
                   + ', State: ' + resposeitem['state'])
             print('Data length: ' + str(resposeitem['length'])
                   + ', following: ' + str(len(resposeitem['user_following_list'])))
-            print('Crawled user: ' + str(len(self.crawled_set))
+            print('Crawled user: ' + str(self.crawled_count)
                   + ', tobecrawled_queue: ' + str(tobecrawled_queue.qsize())
                   + ', Data response_queue: ' + str(response_queue.qsize()))
         print("Master thread exited.")
@@ -72,7 +80,13 @@ class WorkerThread(Thread):
     def run(self):
         session = CrawlSession()
 
+        last_time = time.time()
         while True:
+            if (time.time() - last_time) < interval_time:
+                continue
+            else:
+                last_time = time.time()
+
             try:
                 token = tobecrawled_queue.get(block=True, timeout=30)
             except:
@@ -99,7 +113,7 @@ if __name__ == '__main__':
     master_thread = MasterThread()
 
     worker_list = []
-    for i in range(1):
+    for i in range(threads_numbers):
         worker_thread = WorkerThread()
         worker_list.append(worker_thread)
 
