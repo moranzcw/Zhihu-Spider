@@ -30,8 +30,8 @@ class CrawlSession(requests.Session):
     def __getpagejson(self, urltoken):
         user_following_url = "https://www.zhihu.com/people/" + urltoken + "/following"
         try:
-            # response = self.get(user_following_url, headers=headers, proxies=proxy.proxies)
-            response = self.get(user_following_url, headers=headers)
+            response = self.get(user_following_url, headers=headers, proxies=proxy.proxies)
+            # response = self.get(user_following_url, headers=headers)
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 pagejson_text = soup.body.contents[1].attrs['data-state']

@@ -6,29 +6,27 @@ Info
 - github : "moranzcw@gmail.com"
 - date   : "2017.7.24"
 """
-import os
 import time
 from threading import Thread
 from queue import Queue
 import json
 from crawlsession import CrawlSession
 import datafile
+import os
 
 __author__ = """\
-  ___    ___
- |   \  /   |
- |    \/    | ______  __ ___  ___ __  ______
- |  |\  /|  |/  __  \|  '___//  _`  ||  '_  \ 
- |  | \/ |  |  (__)  |  |   |  (_|  ||  | |  |
- |__|    |__|\______/|__|    \___,__||__| |__|"""
+  /\/\   ___  _ __ __ _ _ __  
+ /    \ / _ \| '__/ _` | '_ \ 
+/ /\/\ \ (_) | | | (_| | | | |
+\/    \/\___/|_|  \__,_|_| |_|"""
 
 tocrawl_queue = Queue(maxsize=100000)
 response_queue = Queue()
 df = datafile.DataFile()
 
-concurrent = 5
-threads_numbers = 1
-interval_time = threads_numbers/concurrent
+threads_numbers = 25
+# concurrent = 30
+# interval_time = threads_numbers/concurrent
 
 
 class MasterThread(Thread):
@@ -40,6 +38,7 @@ class MasterThread(Thread):
             'response_count': 0,
             'success_count': 0,
             'failed_count': 0,
+            'data_count': 0,
             'last_time': 0.0
         }
         # 从文件读取已爬取用户的list，并转换为set，用户去重
@@ -70,13 +69,17 @@ class MasterThread(Thread):
         print(__author__)
         print('\033[0m')
 
-        print("已爬取：\033[1;33;46m" + str(self.count['crawled_count']) + "\033[0m个")
-        print("待爬取队列：\033[1;33;46m%6d\033[0m'个，响应队列：\033[1;33;46m%d\033[0m个"
-              % (self.count['tocrawl_count'], self.count['response_count']))
-        print("获取：\033[1;33;46m%2.2f\033[0m个/秒，未获取：\033[1;33;46m%2.2f\033[0m个/秒"
-              % (self.count['success_count']/interval, self.count['failed_count']/interval))
+        print("已获取：\033[30;47m" + str(self.count['crawled_count']) + "\033[0m用户")
+        print("任务队列：\033[30;47m%d\033[0m用户" % self.count['tocrawl_count'])
+        print("响应队列：\033[30;47m%d\033[0m用户" % self.count['response_count'])
+        print("有效：\033[30;47m%.2f\033[0m用户/秒" % (self.count['success_count']/interval))
+        print("无效：\033[30;47m%.2f\033[0m用户/秒" % (self.count['failed_count']/interval))
+        print("并发：\033[30;47m%.2f\033[0m请求/秒" % ((self.count['failed_count']+self.count['success_count'])/interval))
+        print("有效带宽：\033[30;47m%.2f\033[0m kbps" % ((self.count['data_count']*8/1024)/interval))
+
         self.count['success_count'] = 0
         self.count['failed_count'] = 0
+        self.count['data_count'] = 0
         pass
 
     def run(self):
@@ -87,6 +90,7 @@ class MasterThread(Thread):
             if resposeitem['state'] == 'OK':
                 self.crawled_set.add(resposeitem['user_url_token'])
                 self.count['crawled_count'] += 1
+                self.count['data_count'] += resposeitem['length']
                 self.count['success_count'] += 1
             else:
                 self.count['failed_count'] += 1
@@ -98,6 +102,8 @@ class MasterThread(Thread):
             # 获得用户关注列表，并去重
             followinglist = resposeitem['user_following_list']
             for token in followinglist:
+                if tocrawl_queue.qsize() > 99000:
+                    break
                 if token not in self.crawled_set and token not in self.tocrawl_set:
                     try:
                         tocrawl_queue.put_nowait(token)
@@ -123,10 +129,10 @@ class WorkerThread(Thread):
 
         last_time = time.time()
         while True:
-            if (time.time() - last_time) < interval_time:
-                continue
-            else:
-                last_time = time.time()
+            # if (time.time() - last_time) < interval_time:
+            #     continue
+            # else:
+            #     last_time = time.time()
 
             try:
                 token = tocrawl_queue.get(block=True, timeout=30)
@@ -135,9 +141,10 @@ class WorkerThread(Thread):
 
             info = session.getinfo(token)
 
-            temp = json.loads(info['user_following_list'])
+            tempjson = json.loads(info['user_following_list'])
+
             resposeitem = {'user_url_token': info['user_url_token'],
-                           'user_following_list': temp['ids']
+                           'user_following_list': tempjson['ids']
                            }
             if len(info['user_data_json']) == 0:
                 resposeitem['state'] = 'Cannot_Obtain'
