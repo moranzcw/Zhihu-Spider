@@ -24,9 +24,7 @@ tocrawl_queue = Queue(maxsize=100000)
 response_queue = Queue()
 df = datafile.DataFile()
 
-threads_numbers = 25
-# concurrent = 30
-# interval_time = threads_numbers/concurrent
+threads_numbers = 20
 
 
 class MasterThread(Thread):
@@ -42,10 +40,12 @@ class MasterThread(Thread):
             'last_time': 0.0
         }
         # 从文件读取已爬取用户的list，并转换为set，用户去重
+        print("加载已爬取用户列表...")
         crawled_list = df.loadusercrawled()
         self.crawled_set = set(crawled_list)
         self.tocrawl_set = set()
         # 从文件读取待爬取用户的列表，并导入待爬取用户的queue
+        print("生成任务队列...")
         tocrawled_list = df.loaduseruncrawled(self.crawled_set)
         for token in tocrawled_list:
             try:
@@ -127,12 +127,7 @@ class WorkerThread(Thread):
     def run(self):
         session = CrawlSession()
 
-        last_time = time.time()
         while True:
-            # if (time.time() - last_time) < interval_time:
-            #     continue
-            # else:
-            #     last_time = time.time()
 
             try:
                 token = tocrawl_queue.get(block=True, timeout=30)

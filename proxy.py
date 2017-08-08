@@ -6,8 +6,8 @@ proxyHost = "http-dyn.abuyun.com"
 proxyPort = "9020"
 
 # 代理隧道验证信息
-proxyUser = "H44HXH2F0706Q3UD"
-proxyPass = "2543CCC7114B3C9B"
+proxyUser = "H2RTKWWJN9982LUD"
+proxyPass = "FF914AB959792478"
 
 proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
     "host": proxyHost,
