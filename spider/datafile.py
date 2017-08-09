@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
-维持一个单例模式的对象，用于存取数据文件（csv文件）。
-author: "moran"
-github: "moranzcw@gmail.com"
-date: "2017.7.24"
+Description
+- 将知乎用户的个人信息json存储到csv文件中。
+- 实现了一些必要的功能：
+    - 从已有的csv文件中提取出所有用户，用于程序中断后重启时加载已爬取用户列表。
+    - 从已有的csv文件中提取指定数目的未爬取用户，用于程序中断后重启时生成任务队列。
+- 类DataFile为单例模式，在程序中只有一个实例。
+- 线程安全。
+Info
+- author: "moran"
+- github: "moranzcw@gmail.com"
+- date: "2017.7.24"
 """
-
 import threading
 import csv
 import os.path
 import json
+
+__author__ = """\
+  /\/\   ___  _ __ __ _ _ __  
+ /    \ / _ \| '__/ _` | '_ \ 
+/ /\/\ \ (_) | | | (_| | | | |
+\/    \/\___/|_|  \__,_|_| |_|"""
 
 # 操作文件时使用的可重入互斥锁，用于保证线程安全
 FILELOCK = threading.Lock()
@@ -19,7 +30,7 @@ FILELOCK = threading.Lock()
 
 class Singleton(object):
     """
-    实现单例模式，DataFile继承此类，所以DataFile在程序中只有一个实例
+    实现单例模式，DataFile在程序中只有一个实例
 
     Attributes:
         _instance: 唯一实例的引用。
@@ -34,7 +45,7 @@ class Singleton(object):
 
 class DataFile(Singleton):
     """
-    操作csv文件，保存用户数据
+    操作csv文件，保存用户数据。
 
     Attributes:
         FILEPATH: 存储数据文件（csv文件）的文件夹绝对路径
@@ -45,7 +56,7 @@ class DataFile(Singleton):
         __currentfile: 当前操作文件的绝对路径文件名，由于数据较大，分多个文件保存，所以需要变量来指向当前操作的文件
     """
     def __init__(self):
-        self.FILEPATH = os.path.join(os.path.abspath('.'), 'datafile')
+        self.FILEPATH = os.path.join(os.path.abspath('..'), 'datafile')
         self.PREFIX = os.path.join(self.FILEPATH, 'data')
         self.SUFFIX = '.csv'
         self.MAXSIZE = 100 * 1024 * 1024
@@ -55,9 +66,10 @@ class DataFile(Singleton):
         pass
 
     def loadusercrawled(self):
-        """
-        从已有的csv文件加载已经爬取用户的url token，即每个csv文件的第一列。
-        此函数用于爬虫程序中断后重启的状态恢复。
+        """加载已爬取用户列表。
+
+        从已有的csv文件加载已经爬取用户的url token，即每个csv文件的第一列，得到一个列表。
+        此函数用于爬虫程序中断后重启时的状态恢复。
 
         Args:
             None.
@@ -94,9 +106,22 @@ class DataFile(Singleton):
         FILELOCK.release()
         return usercrawled
 
-    def loaduseruncrawled(self, usercrawled_set):
-        """
+    def loaduseruncrawled(self, usercrawled_set, user_count=100000):
+        """加载未爬取用户列表。
 
+        从已有的csv文件加载已经爬取用户的关注列表（csv文件的第三列），
+        并用已爬取用户列表去重，得到一个未爬取用户的列表。
+        默认加载100000个未爬取用户。
+        此函数用于爬虫程序中断后重启时的状态恢复。
+
+        Args:
+            None.
+
+        Returns:
+            list: 一个包含未爬取用户的url token的list。
+
+        Raises:
+            None.
         """
         if not os.path.exists(self.FILEPATH):
             useruncrawled = list()
@@ -118,7 +143,7 @@ class DataFile(Singleton):
         # 从上面的列表中，依次遍历每个文件，得到一个不超过100000个未爬取用户的列表。
         useruncrawled = list()
         for filename in csvfilelist[::-1]:
-            if len(useruncrawled) >= 100000:
+            if len(useruncrawled) >= user_count:
                 break
             with open(filename, 'r', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -158,9 +183,11 @@ class DataFile(Singleton):
 
         FILELOCK.acquire()
         # 从'data0001.csv'开始依次按序号生成文件名，判断目录下是否已存在该文件；
-        # 若存在且文件大小不到设置的MAXSIZE，就将该文件作为当前操作文件，并退出函数；
-        # 若存在但文件大小达到设置的MAXSIZE，就继续生成下一个文件名，如此循环；
-        # 若不存在该文件，则用这个文件名创建一个新csv文件，做为当前操作文件，并退出函数。
+        # 若存在该文件：
+        #   文件大小不到设置的MAXSIZE，就将该文件作为当前操作文件，并退出函数；
+        #   文件大小已经达到设置的MAXSIZE，就继续生成下一个文件名，重复以上操作；
+        # 若不存在该文件：
+        #   用这个文件名创建一个新csv文件，做为当前操作文件，并退出函数。
         i = 0
         while True:
             i += 1
