@@ -15,7 +15,7 @@ Info
 """
 import threading
 import csv
-import os.path
+import sys, os.path
 import json
 
 __author__ = """\
@@ -56,7 +56,7 @@ class DataFile(Singleton):
         __currentfile: 当前操作文件的绝对路径文件名，由于数据较大，分多个文件保存，所以需要变量来指向当前操作的文件
     """
     def __init__(self):
-        self.FILEPATH = os.path.join(os.path.abspath('..'), 'datafile')
+        self.FILEPATH = os.path.join(os.path.dirname(sys.path[0]), 'datafile')  # 此脚本文件路径的上一级路径
         self.PREFIX = os.path.join(self.FILEPATH, 'data')
         self.SUFFIX = '.csv'
         self.MAXSIZE = 100 * 1024 * 1024

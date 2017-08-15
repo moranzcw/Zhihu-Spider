@@ -43,9 +43,9 @@ class MasterThread(Thread):
     主线程
 
     Attributes:
-        count:
-        crawled_set:
-        task_set:
+        count: 状态信息，用于实时显示爬虫状态
+        crawled_set: 已爬取用户集合，用于去除重复用户
+        task_set: 待爬取用户集合，元素与任务队列保持一致，用于去除重复用户
     """
     def __init__(self):
         Thread.__init__(self)
