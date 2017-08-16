@@ -186,7 +186,7 @@ $ python spider/run.py
 #### 程序文件结构
 程序文件结构如下：
 
-![](./image/file.jpg)
+![](./image/file.png)
 
 * spider文件夹：爬虫程序文件
   * proxy.py: 包含getproxy()函数，用于获取代理服务器的IP地址和端口，调用一次返回一个代理IP。
@@ -199,7 +199,9 @@ $ python spider/run.py
 
 程序流程如下：
 
-![](./image/flow.jpg)
+![](./image/flow.png)
+
+
 
 #### 代理
 
