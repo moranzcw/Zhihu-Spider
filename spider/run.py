@@ -15,7 +15,7 @@ import os
 import json
 from threading import Thread
 from queue import Queue
-from crawlsession import CrawlSession
+from crawl import Crawl
 from datafile import DataFile
 
 __author__ = """\
@@ -32,7 +32,7 @@ response_queue = Queue()
 # 数据文件操作接口
 df = DataFile()
 # 用户信息获取接口
-session = CrawlSession()
+crawl = Crawl()
 
 # 工作线程的数量
 threads_numbers = 20
@@ -78,24 +78,24 @@ class MasterThread(Thread):
 
     def run(self):
         while self.count['crawled_count'] < 10000000:
-            resposeitem = response_queue.get()
+            responseitem = response_queue.get()
 
             # 确认是否爬取到一个用户信息，若是，则加入已爬取集合中
-            if resposeitem['state'] == 'OK':
-                self.crawled_set.add(resposeitem['user_url_token'])
+            if responseitem['state'] == 'OK':
+                self.crawled_set.add(responseitem['user_url_token'])
                 # 更新状态新信息
                 self.count['crawled_count'] += 1
-                self.count['data_count'] += resposeitem['length']
+                self.count['data_count'] += responseitem['length']
                 self.count['success_count'] += 1
             else:
                 self.count['failed_count'] += 1
 
             # 无论是否成功爬取，都从待爬取集合中删除
-            if resposeitem['user_url_token'] in self.task_set:
-                self.task_set.remove(resposeitem['user_url_token'])
+            if responseitem['user_url_token'] in self.task_set:
+                self.task_set.remove(responseitem['user_url_token'])
 
             # 获得用户关注列表，并去重
-            followinglist = resposeitem['user_following_list']
+            followinglist = responseitem['user_following_list']
             for token in followinglist:
                 if task_queue.qsize() > 99000:
                     break
@@ -160,25 +160,25 @@ class WorkerThread(Thread):
                 break
 
             # 获取该用户信息
-            info = session.getinfo(token)
+            info = crawl.getinfo(token)
             # 生成响应信息，每个响应包含一个保存用户信息的json和该用户的关注列表
             tempjson = json.loads(info['user_following_list'])
-            resposeitem = {'user_url_token': info['user_url_token'],
+            responseitem = {'user_url_token': info['user_url_token'],
                            'user_following_list': tempjson['ids']
                            }
 
             if len(info['user_data_json']) == 0:
                 # 未获取到用户信息，在响应信息中加入失败状态
-                resposeitem['state'] = 'Cannot_Obtain'
-                resposeitem['length'] = 0
+                responseitem['state'] = 'Cannot_Obtain'
+                responseitem['length'] = 0
             else:
                 # 获取到用户信息，在响应信息中加入成功状态
                 df.saveinfo(info)
-                resposeitem['state'] = 'OK'
-                resposeitem['length'] = len(info['user_data_json'])
+                responseitem['state'] = 'OK'
+                responseitem['length'] = len(info['user_data_json'])
 
             # 将响应信息放入响应队列
-            response_queue.put(resposeitem)
+            response_queue.put(responseitem)
         print("Worker thread exited.")
 
 if __name__ == '__main__':

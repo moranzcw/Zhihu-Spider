@@ -3,7 +3,7 @@
 """
 Description
 - 获取指定知乎用户的主页，并提取出个人信息。
-- 类CrawlSession为单例模式，在程序中只有一个实例。
+- 类Crawl为单例模式，在程序中只有一个实例。
 - 线程安全。
 Required
 - requests
@@ -37,7 +37,7 @@ headers = {
 
 class Singleton(object):
     """
-    实现单例模式，CrawlSession在程序中只有一个实例
+    实现单例模式，Crawl在程序中只有一个实例
 
     Attributes:
         _instance: 唯一实例的引用。
@@ -50,7 +50,7 @@ class Singleton(object):
         return cls._instance
 
 
-class CrawlSession(Singleton):
+class Crawl(Singleton):
     """
     获取指定知乎用户主页，并提取出个人信息。
 
