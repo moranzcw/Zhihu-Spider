@@ -195,10 +195,31 @@ $ python spider/run.py
 
 #### 用户信息获取
 
-TODO
+通常一个请求/响应不能加载一个完整页面，所以需要一组请求/响应来完成html文本，JavaScript代码，图片/音频等资源文件的加载。不过这个爬虫案例中，我们在第一次请求/响应中获取的html文档就包含我们需要的所有信息。
+
+以用户vczh为例，其主页为 https://www.zhihu.com/people/excited-vczh ，这个页面下还有anwsers，asks，posts等标签页，我们直接访问following（关注列表）标签页，即 https://www.zhihu.com/people/excited-vczh/following ， 这样一次请求/响应即可同时获得用户信息和用户关注列表。
+
+打开chrome调试工具，查看第一次请求/响应的详细内容：
+
+![](./image/request.png)
+
+得到html文本后，在html接近末尾的一个div标签中，有一个data-state属性，它用json存储了信息，我们需要的用户信息和用户关注列表都在其中：
+
+![](./image/datastate.png)
 
 #### 数据存储
-TODO
+
+数据采用csv文件存储，对于pandas等数据分析工具，csv格式非常方便。
+
+考虑到文件意外损坏的可能性，分多个文件存储，每个文件100MB。
+
+由于程序使用了多线程，所以在存取数据时保证了线程安全。
 
 #### 并发
-TODO
+程序使用多线程来解决网络IO阻塞导致CPU空闲的问题。
+
+由于Python原生解释器的GIL锁，Python的多线程只是在一个CPU上切换运行，而不是在多个CPU上并行运行，所以使用场景有一些限制。换句话说，对于一颗四核心的CPU，一个Python程序实例最高只有25%的占用率。
+
+![](./image/run.jpg)
+
+不过对于此爬虫案例，GIL锁并不是瓶颈，笔者测试，此程序在使用某个付费代理服务时，在200线程的情况下，能保持100请求/s的并发，CPU占用率约在17%-22%（笔记本四核i7），带宽占用不足1MB/s。
