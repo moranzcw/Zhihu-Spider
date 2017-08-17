@@ -40,13 +40,13 @@ $ python spider/run.py
 
 ![](./image/datafile.png)
 
-一共三列：
+第一行为表头，表格一共三列：
 
-1. 第一列为用户的url token，如用户vczh的主页链接：https://www.zhihu.com/people/excited-vczh，那么vczh的token就是excited-vczh，用户token具有唯一性，适合作为程序中标识每个用户的ID。
+1. **第一列为用户的url token**，即用户主页url中的id，如用户vczh的主页链接：https://www.zhihu.com/people/excited-vczh ，那么vczh的token就是excited-vczh，这个token具有唯一性。
 
-2. 第二列为实际获取到的数据，数据是一个json，因为知乎在页面中是以json来传送用户信息的，所以我们直接存储这个json，这个json包含的信息很丰富，非常方便数据分析。
+2. **第二列为对应用户的数据**，数据是json格式的，因为知乎在页面中是以json来传送用户信息的，所以就直接存储了这个json，Python内置json读写函数，非常方便数据分析。
 
-   比如整理格式后，用户vczh的json:
+   以下是整理格式后，用户vczh的部分数据:
 
    ```json
    {
@@ -69,9 +69,7 @@ $ python spider/run.py
    					"url": "http://www.zhihu.com/api/v4/topics/19599737", 
    					"avatarUrl": "https://pic2.zhimg.com/4d0d193a9_is.jpg", 
    					"name": "华南理工大学（SCUT）", 
-   					"introduction": "华南理工大学（South China University of Technology）（原华南工学院，1952年建立）：教育部直属的重点大学，涵盖理、工、管、经、文、法等多学科，先后成为“211工程”和“985工程”院校，被誉为中国“南方工科大学的一面旗帜”，“工程师的摇篮”，“企业家的摇篮”。校园分为两个校区，北校区位于广州市天河区五山高校区，南校区位于广州市番禺区广州大学城内。学校占地面积4417亩(其中南校区1677亩)。北校区湖光山色交相辉映，绿树繁花香飘四季，民族式建筑与现代化楼群错落有致，环境优美清新，文化底蕴深厚，是教育部命名的“文明校园”；南校区是一个环境优美、设施先进、管理完善、制度创新的现代化校园，是莘莘学子求学的理想之地。", 
    					"type": "topic", 
-   					"excerpt": "华南理工大学（South China University of Technology）（原华南工学院，1952年建立）：教育部直属的重点大学，涵盖理、工、管、经、文、法等多学科，先后成为“211工程”和“985工程”院校，被誉为中国“南方工科大学的一面旗帜”，“工程师的摇篮”，“企业家的摇篮”。校园分为两个校区，北校区位于广州市天河区五山高校区，南校区位于广州市番禺区广州大学城内。学校占地面积4417亩(其中南校区1677亩)。北校区湖光山色交相辉…", 
    					"id": "19599737"
    				}
    			}
@@ -110,18 +108,12 @@ $ python spider/run.py
    						"avatarUrl": "https://pic3.zhimg.com/v2-d3a9ee5ba3a2fe711087787c6169dcca_is.jpg", 
    						"name": "Microsoft Office", 
    						"introduction": "Microsoft Office 是一套由微软开发的办公软件。", 
-   						"type": "topic", 
-   						"excerpt": "Microsoft Office 是一套由微软开发的办公软件。", 
-   						"id": "19557307"
    					}, 
    				"job": 
    					{
    						"url": "http://www.zhihu.com/api/v4/topics/19578588", 
    						"avatarUrl": "https://pic1.zhimg.com/e82bab09c_is.jpg", 
    						"name": "Developer", 
-   						"introduction": "", 
-   						"type": "topic", 
-   						"excerpt": "", 
    						"id": "19578588"
    					}
    			}
@@ -130,17 +122,6 @@ $ python spider/run.py
    	"avatarHue": "", 
    	"avatarUrlTemplate": "https://pic1.zhimg.com/3a6c25ac3864540e80cdef9bc2a73900_{size}.jpg", 
    	"followingTopicCount": 34, 
-   	"description": "长期开发跨三大PC平台的GUI库<br><a href="https://link.zhihu.com/?target=http%3A//www.gaclib.net" class=" external" target="_blank" rel="nofollow noreferrer"><span class="invisible">http://www.</span><span class="visible">gaclib.net</span><span class="invisible"></span><i class="icon-external"></i></a>，讨论QQ群：231200072（不闲聊）<br>不再更新的技术博客：<a href="https://link.zhihu.com/?target=http%3A//www.cppblog.com/vczh" class=" external" target="_blank" rel="nofollow noreferrer"><span class="invisible">http://www.</span><span class="visible">cppblog.com/vczh</span><span class="invisible"></span><i class="icon-external"></i></a>", 
-   	"business": 
-   		{
-   			"url": "http://www.zhihu.com/api/v4/topics/19619368", 
-   			"avatarUrl": "https://pic1.zhimg.com/e82bab09c_is.jpg", 
-   			"name": "计算机软件", 
-   			"introduction": "徼", 
-   			"type": "topic", 
-   			"excerpt": "徼", 
-   			"id": "19619368"
-   		}, 
    	"avatarUrl": "https://pic1.zhimg.com/3a6c25ac3864540e80cdef9bc2a73900_is.jpg", 
    	"columnsCount": 5, 
    	"hostedLiveCount": 0, 
@@ -157,17 +138,6 @@ $ python spider/run.py
    	"articlesCount": 66, 
    	"name": "vczh", 
    	"questionCount": 487, 
-   	"locations": 
-   		[
-   			{
-   				"url": "http://www.zhihu.com/api/v4/topics/19583552", 
-   				"avatarUrl": "https://pic4.zhimg.com/161f6ece791a4950ded3278fb74a2f9b_is.jpg", 
-   				"name": "西雅图（Seattle）", 
-   				"introduction": "西雅图是美国西北部最大的城市。多家高科技公司的总部（Microsoft, Amazon，Boeing 等等）坐落于此。", "type": "topic", 
-   				"excerpt": "西雅图是美国西北部最大的城市。多家高科技公司的总部（Microsoft, Amazon，Boeing 等等）坐落于此。", 
-   				"id": "19583552"
-   			}
-   		], 
    	"badge": [], 
    	"url": "http://www.zhihu.com/api/v4/people/0970f947b898ecc0ec035f9126dd4e08", 
    	"messageThreadToken": "4874924000", 
@@ -178,11 +148,11 @@ $ python spider/run.py
    }
    ```
 
-   可以看到，用户vczh的教育信息，工作信息，描述，点赞数，被收藏数等等都被包含了。
+   可以看到，用户vczh的大部分基本信息都被包含了。
 
-3. 第三列保存每个用户的关注用户列表，每个用户只保存20个，此列不用作为数据，只作为爬虫中断后恢复现场和任务队列只用。分析数据时可以忽略。
+3. **第三列保存每个用户的关注用户列表**，每个用户只保存20个，此列不用作为数据，只作为爬虫中断后恢复现场和任务队列只用。分析数据时可以忽略。
 
-## 程序原理
+## 程序介绍
 #### 程序文件结构
 程序文件结构如下：
 
@@ -205,9 +175,26 @@ $ python spider/run.py
 
 #### 代理
 
-TODO
+1. IP代理服务
+
+知乎拥有一定的反爬虫机制。在此案例中，知乎的用户页面不需要登录就能查看，所以需要解决的问题就是IP封锁。笔者简单测试，对于一个IP，每秒一次请求，大约5分钟后就会要求输入验证码，可以说非常严格，所以使用IP代理服务来解决IP封锁的问题。
+
+一般来说，我们有两种解决方案，一种是自己搜集免费代理，建立一个IP代理池，第二种是直接使用付费代理服务。无论哪种，我们的获取代理IP并爬取目标网站的流程大致是这样：
+
+![](./image/proxy.png)
+
+通过IP代理服务请求一个IP，再使用这个IP代理服务器转发请求，获取页面。
+
+笔者使用的IP代理服务略有区别，是一种IP代理隧道，流程大致是这样的：
+
+![](./image/proxytunnel.png)
+
+对于爬虫来说，就省略了一个获取IP的步骤，只需要直接将请求发送到指定的IP代理服务就可以了。
+
+如果需要使用使用上一种通用的IP代理模式，那么只需要再proxy.py中重写getproxies函数就可以了。
 
 #### 用户信息获取
+
 TODO
 
 #### 数据存储

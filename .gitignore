@@ -1,7 +1,6 @@
 *.csv
 *.html
 *.json
-*.jpg
 datafile
 .idea
 __pycache__
