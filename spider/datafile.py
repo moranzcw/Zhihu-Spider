@@ -15,7 +15,8 @@ Info
 """
 import threading
 import csv
-import sys, os.path
+import sys
+import os.path
 import json
 
 __author__ = """\
