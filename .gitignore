@@ -2,5 +2,6 @@
 *.html
 *.json
 datafile
-.idea
+.*
 __pycache__
+analysis/.ipynb_checkpoints/analysis-checkpoint.ipynb
