@@ -28,7 +28,7 @@ def washdata():
                     csvfilelist.append(os.path.join(DATAPATH, filename))
     csvfilelist.sort()
     
-    WASHED_FILE = os.path.join(CUR_PATH, 'washeddata.csv')
+    WASHED_FILE = os.path.join(CUR_PATH, 'data','washeddata.csv')
     WASHED_TABLEHEADER = ['user_url_token', 'user_data_json']
     # 整理后的文件存在，就退出
     if os.path.exists(WASHED_FILE):
@@ -67,7 +67,7 @@ def datajsons():
     CUR_PATH = sys.path[0]
     if CUR_PATH == '':
         CUR_PATH = os.getcwd()
-    FILEPATH = os.path.join(CUR_PATH, 'washeddata.csv')
+    FILEPATH = os.path.join(CUR_PATH, 'data','washeddata.csv')
     TABLEHEADER = ['user_url_token', 'user_data_json']
     
     # 数据文件夹不存在，就退出
